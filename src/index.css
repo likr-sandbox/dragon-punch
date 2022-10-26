@@ -9,3 +9,7 @@
 .node-link-diagram {
   display: block;
 }
+
+html {
+  background-color: #000;
+}

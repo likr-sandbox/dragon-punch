@@ -7,18 +7,20 @@ import {
 import * as d3 from "d3";
 
 async function getData() {
-  const response = await fetch("data.json");
+  const response = await fetch("data/syoryuken_trd_985646706_202208.json");
+  // const response = await fetch("data/syoryuken_trd_580000845_202208.json");
+  // const response = await fetch("data/syoryuken_trd_985794306_202208.json");
   return response.json();
 }
 
 function layoutGraph(data) {
   const nodes = data.nodes.map((node) => ({ ...node }));
   const links = data.links.map((link) => ({ ...link }));
-  const forceNode = d3.forceManyBody().strength(-100);
+  const forceNode = d3.forceManyBody().strength(-30);
   const forceLink = d3
     .forceLink(links)
     .id((node) => node.id)
-    .distance(() => 100);
+    .distance(() => 30);
 
   const simulation = d3
     .forceSimulation(nodes)
@@ -28,9 +30,13 @@ function layoutGraph(data) {
     .tick(300)
     .stop();
 
-  const color = d3.scaleOrdinal(d3.schemeCategory10);
+  const size = d3.scaleSqrt().domain([0, 1]).range([1, 15]);
+  const color = d3
+    .scaleSequential(d3.interpolateYlGnBu)
+    .domain(d3.extent(nodes, (node) => node.tier));
   for (const node of nodes) {
-    node.color = color(node.group);
+    node.r = size(node.dependantRatio);
+    node.color = color(node.tier);
   }
 
   return { nodes, links };
@@ -39,10 +45,7 @@ function layoutGraph(data) {
 function Node({ node }) {
   return (
     <g transform={`translate(${node.x},${node.y})`}>
-      <circle fill={node.color} r="3" />
-      <text textAnchor="middle" dominantBaseline="central" fontSize="8">
-        {node.name}
-      </text>
+      <circle fill={node.color} r={node.r} />
     </g>
   );
 }
@@ -53,7 +56,7 @@ function Link({ link }) {
   path.lineTo(link.target.x, link.target.y);
   return (
     <g>
-      <path d={path} fill="none" stroke="#ccc" />
+      <path d={path} fill="none" stroke="#444" />
     </g>
   );
 }
